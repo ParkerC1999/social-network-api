@@ -15,7 +15,14 @@ const thoughtController = {
 
     // find thought by id
     getThoughtById({ params }, res) {
-
+        Thought.findOne({ _id: params.id })
+            .select('-__V')
+            .sort({ _id: -1 })
+            .then(dbThoughtData => res.json(dbThoughtData))
+            .catch(err => {
+                console.log(err);
+                res.sendStatus(400);
+            });
     },
 
     // add thought to User
@@ -40,7 +47,14 @@ const thoughtController = {
 
     // PUT to update a thought by its _id
     updateThought({ params }, res) {
-
+        Thought.findByIdAndUpdate({ _id: params }, body, { new: true, runValidators: true })
+            .then(dbUserData => {
+                if (!dbUserData) {
+                    res.status(400).json({ message: 'No thought with that id!' })
+                }
+                res.json(dbUserData);
+            })
+            .catch(err => res.json(err));
     },
 
     // DELETE to remove a thought by its _id
@@ -68,7 +82,7 @@ const thoughtController = {
     // Reactions
     // add reaction to thought
     addReaction({ params, body }, res) {
-        Comment.findOneAndUpdate(
+        Thought.findOneAndUpdate(
             { _id: params.thoughtId },
             { $push: { reactions: body } },
             { new: true, runValidators: true }
@@ -86,13 +100,13 @@ const thoughtController = {
     // remove reaction trough thought 
     removeReaction({ params }, res) {
         Comment.findOneAndUpdate(
-          { _id: params.thoughtId },
-          { $pull: { replies: { replyId: params.rectionId } } },
-          { new: true }
+            { _id: params.thoughtId },
+            { $pull: { replies: { replyId: params.rectionId } } },
+            { new: true }
         )
-          .then(dbUserData => res.json(dbUserData))
-          .catch(err => res.json(err));
-      }
+            .then(dbUserData => res.json(dbUserData))
+            .catch(err => res.json(err));
+    }
 }
 
 module.exports = thoughtController;
